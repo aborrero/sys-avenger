@@ -83,8 +83,14 @@ def query_AAAA(fqdn, verbose):
 
 def fqdn_symmetry(fqdn_list, verbose):
 	ret = True
+	first = True
 
 	for fqdn in fqdn_list:
+		if first:
+			first = False
+		else:
+			print("")
+
 		if not query_A(fqdn, verbose):
 			ret = False
 
