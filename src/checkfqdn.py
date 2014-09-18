@@ -46,7 +46,11 @@ def str_clean_last_dot(str):
 def compare_regs(ptr, orig, fqdn):
 	ret = True
 
-	PTR_regs = dns.resolver.query(ptr, 'PTR')
+	try:
+		PTR_regs = dns.resolver.query(ptr, 'PTR')
+	except Exception:
+		print("W: Unable to get PTR:", ptr)
+		pass
 
 	for PTR in PTR_regs:
 		PTR_text = str_clean_last_dot(PTR.to_text())
