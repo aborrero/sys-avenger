@@ -31,6 +31,8 @@ import argparse
 import dns.resolver
 import dns.reversename
 
+verbose = False
+
 #
 # functions
 #
@@ -41,9 +43,11 @@ def str_clean_last_dot(str):
 
 	return str
 
-def compare_regs(ptr, orig, fqdn, verbose):
+def compare_regs(ptr, orig, fqdn):
 	ret = True
+
 	PTR_regs = dns.resolver.query(ptr, 'PTR')
+
 	for PTR in PTR_regs:
 		PTR_text = str_clean_last_dot(PTR.to_text())
 		if PTR_text != fqdn:
@@ -53,13 +57,13 @@ def compare_regs(ptr, orig, fqdn, verbose):
 			print(fqdn, "-->", orig, "-->", PTR_text)
 	return ret
 
-def query_A(fqdn, verbose):
+def query_A(fqdn):
 	ret = True
 	try:
 		A_regs = dns.resolver.query(fqdn, 'A')
 		for A in A_regs:
 			ptr = dns.reversename.from_address(A.to_text())
-			if not compare_regs(ptr, A, fqdn, verbose):
+			if not compare_regs(ptr, A, fqdn):
 				ret = False
 	except Exception:
 		print("W: Unable to get A:", fqdn)
@@ -67,13 +71,13 @@ def query_A(fqdn, verbose):
 
 	return ret
 
-def query_AAAA(fqdn, verbose):
+def query_AAAA(fqdn):
 	ret = True
 	try:
 		AAAA_regs = dns.resolver.query(fqdn, 'AAAA')
 		for AAAA in AAAA_regs:
 			ptr = dns.reversename.from_address(AAAA.to_text())
-			if not compare_regs(ptr, AAAA, fqdn, verbose):
+			if not compare_regs(ptr, AAAA, fqdn):
 				ret = False
 	except Exception:
 		print("W: Unable to get AAAA:", fqdn)
@@ -81,7 +85,7 @@ def query_AAAA(fqdn, verbose):
 
 	return ret
 
-def fqdn_symmetry(fqdn_list, verbose):
+def fqdn_symmetry(fqdn_list):
 	ret = True
 	first = True
 
@@ -91,14 +95,14 @@ def fqdn_symmetry(fqdn_list, verbose):
 		else:
 			print("")
 
-		if not query_A(fqdn, verbose):
+		if not query_A(fqdn):
 			ret = False
 
-		if not query_AAAA(fqdn, verbose):
+		if not query_AAAA(fqdn):
 			ret = False
 	return ret
 
-def fqdns_symmetry(fqdn_list, verbose):
+def fqdns_symmetry(fqdn_list):
 	fqdn_final = []
 	for fqdn in fqdn_list:
 		try:
@@ -113,7 +117,7 @@ def fqdns_symmetry(fqdn_list, verbose):
 			fqdn_final.append(fqdn)
 			pass
 
-	return fqdn_symmetry(fqdn_final, verbose)
+	return fqdn_symmetry(fqdn_final)
 
 #
 # program
@@ -124,5 +128,7 @@ parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output
 parser.add_argument('fqdns', nargs='+', help="FQDNs to check")
 args = parser.parse_args()
 
-if not fqdns_symmetry(args.fqdns, args.verbose):
+verbose = args.verbose
+
+if not fqdns_symmetry(args.fqdns):
 	exit(1)
