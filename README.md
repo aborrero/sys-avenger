@@ -1,7 +1,7 @@
-dns-avenger
+sys-avenger
 ===========
 
-some DNS-related tools
+some weapons for a sysadmin avenger
 
 #### checkfqdn.py
 
