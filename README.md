@@ -1,7 +1,7 @@
 sys-avenger
 ===========
 
-some weapons for a sysadmin avenger
+some weapons for a sysadmin avengers
 
 #### catell.py
 
