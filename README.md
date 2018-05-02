@@ -1,7 +1,32 @@
 sys-avenger
 ===========
 
-some weapons for a sysadmin avengers
+some weapons for sysadmin avengers
+
+#### netns_connections_list.sh
+
+Lists all ifaces which have connections to other ifaces, in all netnamespaces.
+
+	user@debian:~ $ sudo ./netns_connections_list.sh
+	if40	testveth1_p2@if41   test_netns
+	if25	veth1@if26   [main]
+	if36	tap8d7bc846-96@eth0   [main]
+	if39	tap02dc90ca-64@eth1.2120   [main]
+	if41	testveth1_p1@if40   [main]
+	if4	eth1.2105@eth1   [main]
+	if5	eth1.2120@eth1   [main]
+	if6	tapfcf1a098-9d@eth0   [main]
+	if7	tapdb1b15f9-ac@eth0   [main]
+	if8	tap21e10025-d4@eth1   [main]
+	if9	tap666fcda7-04@eth1.2105   [main]
+	if2	ns-fcf1a098-9d@if6   qdhcp-05a5494a-184f-4d5c-9e98-77ae61c56daa
+	if2	ns-8d7bc846-96@if36   qdhcp-60aa9467-253c-4fdf-9fa0-eba42dafc975
+	if2	ha-db1b15f9-ac@if7   qrouter-5712e22e-134a-40d3-a75a-1c9b441717ad
+	if3	qr-21e10025-d4@if8   qrouter-5712e22e-134a-40d3-a75a-1c9b441717ad
+	if4	qg-666fcda7-04@if9   qrouter-5712e22e-134a-40d3-a75a-1c9b441717ad
+	if5	qr-02dc90ca-64@if39   qrouter-5712e22e-134a-40d3-a75a-1c9b441717ad
+	if26	veth0@if25   TEST
+
 
 #### catell.py
 
