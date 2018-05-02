@@ -3,6 +3,21 @@ sys-avenger
 
 some weapons for sysadmin avengers
 
+#### apt-upgrade.py
+
+A python script to deal with upgrades in Debian systems which have a lot of different
+repos configured.
+
+	Usage:
+	  % apt-upgrade [-un] [-f exclude_file] [-x regex] upgrade <suite> [-yh]
+	  % apt-upgrade [-un] [-f exclude_file] [-x regex] report [<suite>] [-h]
+	  % apt-upgrade [-un] [-f exclude_file] [-x regex] list [-h]
+
+Make sure you hold+pin beforehand those packages that should not be upgraded.
+The script requires the python-apt library.
+
+More info at: https://wikitech.wikimedia.org/wiki/Apt-upgrade
+
 #### netns_connections_list.sh
 
 Lists all ifaces which have connections to other ifaces, in all netnamespaces.
