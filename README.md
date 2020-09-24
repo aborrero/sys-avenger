@@ -3,6 +3,31 @@ sys-avenger
 
 some weapons for sysadmin avengers
 
+#### cidrtool.py
+
+A python script IPv4 calculator, to help dealing with CIDRs and to calculate subnets.
+
+	user@debian:~$ src/cidrtool.py 10.0.0.224/28 -s
+	CIDR:		10.0.0.224/28
+	
+	network:	10.0.0.224/28
+	netmask:	255.255.255.240
+	wildcard:	0.0.0.15
+	broadcast:	10.0.0.239
+	
+	host min:	10.0.0.225
+	host max:	10.0.0.238
+	hosts number:	16
+	
+	subnet:		10.0.0.224/29
+	subnet:		10.0.0.232/29
+	
+	subnet:		10.0.0.224/30
+	subnet:		10.0.0.228/30
+	subnet:		10.0.0.232/30
+	subnet:		10.0.0.236/30
+
+
 #### apt-upgrade.py
 
 A python script to deal with upgrades in Debian systems which have a lot of different
