@@ -136,14 +136,20 @@ def fqdns_symmetry(fqdn_list):
 # program
 #
 
-parser = argparse.ArgumentParser(
-    description="Check that given FQDN's A and AAAA regs points back to it."
-)
-parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
-parser.add_argument("fqdns", nargs="+", help="FQDNs to check")
-args = parser.parse_args()
 
-verbose = args.verbose
+def main():
+    parser = argparse.ArgumentParser(
+        description="Check that given FQDN's A and AAAA regs points back to it."
+    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
+    parser.add_argument("fqdns", nargs="+", help="FQDNs to check")
+    args = parser.parse_args()
 
-if not fqdns_symmetry(args.fqdns):
-    exit(1)
+    verbose = args.verbose
+
+    if not fqdns_symmetry(args.fqdns):
+        exit(1)
+
+
+if __name__ == "__main__":
+    main()
