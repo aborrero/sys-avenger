@@ -69,7 +69,7 @@ def main():
     else:
         host_min = cidr.network.network_address + 1
         host_max = cidr.network.broadcast_address - 1
-        nhost = 2 ** (32 - cidr.network.prefixlen)
+        nhost = 2 ** (32 - cidr.network.prefixlen) - 2
 
     print("")
     print("host min:\t{}".format(host_min))
