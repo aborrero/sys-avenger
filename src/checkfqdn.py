@@ -26,6 +26,8 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
+# requires the python3-dnspython (debian)
+
 import sys
 import argparse
 import dns.resolver
@@ -47,7 +49,7 @@ def compare_regs(ptr, orig, fqdn):
 	ret = True
 
 	try:
-		PTR_regs = dns.resolver.query(ptr, 'PTR')
+		PTR_regs = dns.resolver.resolve(ptr, 'PTR')
 	except Exception:
 		print("W: Unable to get PTR:", ptr)
 		pass
@@ -64,7 +66,7 @@ def compare_regs(ptr, orig, fqdn):
 def query_A(fqdn):
 	ret = True
 	try:
-		A_regs = dns.resolver.query(fqdn, 'A')
+		A_regs = dns.resolver.resolve(fqdn, 'A')
 		for A in A_regs:
 			ptr = dns.reversename.from_address(A.to_text())
 			if not compare_regs(ptr, A, fqdn):
@@ -78,7 +80,7 @@ def query_A(fqdn):
 def query_AAAA(fqdn):
 	ret = True
 	try:
-		AAAA_regs = dns.resolver.query(fqdn, 'AAAA')
+		AAAA_regs = dns.resolver.resolve(fqdn, 'AAAA')
 		for AAAA in AAAA_regs:
 			ptr = dns.reversename.from_address(AAAA.to_text())
 			if not compare_regs(ptr, AAAA, fqdn):
@@ -110,7 +112,7 @@ def fqdns_symmetry(fqdn_list):
 	fqdn_final = []
 	for fqdn in fqdn_list:
 		try:
-			CNAME_regs = dns.resolver.query(fqdn, 'CNAME')
+			CNAME_regs = dns.resolver.resolve(fqdn, 'CNAME')
 			if len(CNAME_regs) > 0:
 				if verbose:
 					print(fqdn, "contains CNAME")
