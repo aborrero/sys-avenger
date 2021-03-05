@@ -89,7 +89,7 @@ def parse_args():
     parser.add_argument(
         "--config",
         help="YAML configuration file. Defaults to '%(default)s'",
-        default="/etc/wmcs-netns-events-config.yaml",
+        default="/etc/netns-events-config.yaml",
     )
     parser.add_argument(
         "--list-events", action="store_true", help="list pyinotify events and exit"
