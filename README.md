@@ -3,6 +3,62 @@ sys-avenger
 
 some weapons for sysadmin avengers
 
+#### netns-events.py
+
+Watches and reacts to linux network namespace events, allows to execute arbitrary commands on such
+events and also at daemon startup.
+
+```console
+user@debian:~$ sudo netns-events.py --help
+usage: netns-events.py [-h] [--debug] [--config CONFIG] [--list-events]
+
+Daemon that watches netns events and allows running commands
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --debug          To activate debug mode
+  --config CONFIG  YAML configuration file. Defaults to '/etc/netns-events-config.yaml'
+  --list-events    list pyinotify events and exit
+
+user@debian:~$ sudo netns-events.py --config netns-events-config.yaml
+[netns-events.py] INFO: /var/run/netns/ doesn't exist. Briefly creating dummy netns
+[netns-events.py] INFO: running command: /usr/bin/ip netns add netns-events-dummy
+[netns-events.py] INFO: running command: /usr/bin/ip netns delete netns-events-dummy
+[netns-events.py] INFO: starting operations
+[netns-events.py] INFO: event on netns 'test' matched '.*' 'IN_CREATE'
+[netns-events.py] INFO: running command: : empty command to create a log entry
+[netns-events.py] INFO: event on netns 'test' matched '.*' 'IN_DELETE'
+[netns-events.py] INFO: running command: : empty command to create a log entry
+[..]
+```
+Uses a configuration file like this one:
+
+```yaml
+---
+# $NETNS env var is provided by the runner daemon
+- netns_regex: ^qrouter-.*
+  daemon_startup_actions:
+    - ip netns exec $NETNS sysctl net.netfilter.nf_conntrack_tcp_be_liberal=1
+    - ip netns exec $NETNS sysctl net.netfilter.nf_conntrack_tcp_loose=1
+  inotify_actions:
+    - IN_CREATE:
+        - ip netns exec $NETNS sysctl net.netfilter.nf_conntrack_tcp_be_liberal=1
+        - ip netns exec $NETNS sysctl net.netfilter.nf_conntrack_tcp_loose=1
+# this config is to simply log all netns creation/deletion events, which should
+# help us better understand what the different neutron agents are doing
+- netns_regex: .*
+  daemon_startup_actions:
+    - ": empty command to create a log entry"
+  inotify_actions:
+    - IN_CREATE:
+        - ": empty command to create a log entry"
+    - IN_DELETE:
+        - ": empty command to create a log entry"
+```
+
+More info at: https://ral-arturo.org/2021/03/05/netns-events.html
+
+
 #### cidrtool.py
 
 A python script IPv4 calculator, to help dealing with CIDRs and to calculate subnets.
