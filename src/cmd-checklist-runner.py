@@ -77,18 +77,22 @@ def cmd_run(cmd, expected_retcode, expected_stdout, expected_stderr):
 
     if r.returncode != expected_retcode:
         logging.warning(
-            f"Expected return code '{expected_retcode}', but got '{r.returncode}'"
+            f"cmd '{cmd}', expected return code '{expected_retcode}', but got '{r.returncode}'"
         )
         success = False
 
     stdout = r.stdout.decode("utf-8").strip()
     if stdout != expected_stdout:
-        logging.warning(f"Expected stdout '{expected_stdout}', but got '{stdout}'")
+        logging.warning(
+            f"cmd '{cmd}', expected stdout '{expected_stdout}', but got '{stdout}'"
+        )
         success = False
 
     stderr = r.stderr.decode("utf-8").strip()
     if stderr != expected_stderr:
-        logging.warning(f"Expected stderr '{expected_stderr}', but got '{stderr}'")
+        logging.warning(
+            f"cmd '{cmd}', expected stderr '{expected_stderr}', but got '{stderr}'"
+        )
         success = False
 
     return success
