@@ -49,7 +49,7 @@ def validate_dictionary(dictionary, keys):
         return False
     for key in keys:
         if dictionary.get(key) is None:
-            logging.error(f"missing key {key} in dictionary:\n{dictionary}")
+            logging.error(f"missing key '{key}' in dictionary:\n{dictionary}")
             return False
     return True
 
@@ -58,15 +58,16 @@ def stage_validate_config(args):
     checklist_dict = read_yaml_file(args.checklist_file)
     for definition in checklist_dict:
         if not validate_dictionary(definition, ["name", "tests"]):
-            logging.error(f"couldn't validate file {args.checklist_file}")
+            logging.error(f"couldn't validate file '{args.checklist_file}'")
             return False
         for test in definition["tests"]:
             if not validate_dictionary(test, ["cmd", "retcode", "stdout", "stderr"]):
-                logging.error(f"couldn't validate file {args.checklist_file}")
+                logging.error(f"couldn't validate file '{args.checklist_file}'")
                 return False
 
-    logging.debug(f"{args.checklist_file} seems valid")
+    logging.debug(f"'{args.checklist_file}' seems valid")
     ctx.checklist_dict = checklist_dict
+    return True
 
 
 def cmd_run(cmd, expected_retcode, expected_stdout, expected_stderr):
@@ -160,7 +161,8 @@ def main():
         logging_level = logging.INFO
     logging.basicConfig(format=logging_format, level=logging_level, stream=sys.stdout)
 
-    stage_validate_config(args)
+    if not stage_validate_config(args):
+        sys.exit(1)
     stage_run_tests(args)
     stage_report()
 
