@@ -99,17 +99,16 @@ def cmd_run(cmd, expected_retcode, expected_stdout, expected_stderr):
 
 
 def test_run(test_definition):
-    logging.info("--- running test: {}".format(test_definition["name"]))
+    logging.info("running test: {}".format(test_definition["name"]))
 
     for test in test_definition["tests"]:
         if cmd_run(test["cmd"], test["retcode"], test["stdout"], test["stderr"]):
             continue
 
-        logging.warning("--- failed test: {}".format(test_definition["name"]))
+        logging.warning("failed test: {}".format(test_definition["name"]))
         ctx.counter_test_failed += 1
         return
 
-    logging.info("--- passed test: {}".format(test_definition["name"]))
     ctx.counter_test_ok += 1
 
 
@@ -120,7 +119,6 @@ def stage_run_tests(args):
 
 def stage_report():
     logging.info("---")
-    logging.info("--- finished")
     total = ctx.counter_test_ok + ctx.counter_test_failed
     logging.info("--- passed tests: {}".format(ctx.counter_test_ok))
     logging.info("--- failed tests: {}".format(ctx.counter_test_failed))
