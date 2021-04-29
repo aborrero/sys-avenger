@@ -1,0 +1,26 @@
+---
+- name: "uname -a works"
+  tests:
+    - cmd: uname -a | wc -l
+      retcode: 0
+      stdout: "1"
+      stderr: ""
+
+- name: "internet connectivity"
+  tests:
+    - cmd: curl -s ifconfig.me | grep -q ^[0-9]
+      retcode: 0
+      stdout: ""
+      stderr: ""
+
+- name: "systemctl is happy"
+  tests:
+    - cmd: systemctl | grep failed | wc -l
+      retcode: 0
+      stdout: "0"
+      stderr: ""
+    - cmd: systemctl is-system-running
+      retcode: 0
+      stdout: "running"
+      stderr: ""
+

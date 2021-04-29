@@ -3,6 +3,69 @@ sys-avenger
 
 some weapons for sysadmin avengers
 
+#### cmd-checklist-runner.py
+
+If you want to run a checklist of commands, this is your script. It reads a yaml file with a
+checklist, and runs the commands for you, reporting what happened.
+
+```console
+user@debian:~$ cmd-checklist-runner.py --help
+usage: cmd-checklist-runner.py [-h] [--checklist-file CHECKLIST_FILE] [--debug]
+
+Utility to run arbitrary command tests
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --checklist-file CHECKLIST_FILE
+                        File with testcase definitions. Defaults to 'cmd-checklist.yaml'
+  --debug               debug mode
+
+user@debian:~$ src/cmd-checklist-runner.py --checklist-file src/cmd-checklist.yaml
+[cmd-checklist-runner.py] INFO: --- running test: uname -a works
+[cmd-checklist-runner.py] INFO: --- passed test: uname -a works
+[cmd-checklist-runner.py] INFO: --- running test: internet connectivity
+[cmd-checklist-runner.py] INFO: --- passed test: internet connectivity
+[cmd-checklist-runner.py] INFO: --- running test: systemctl is happy
+[cmd-checklist-runner.py] INFO: --- passed test: systemctl is happy
+[cmd-checklist-runner.py] INFO: ---
+[cmd-checklist-runner.py] INFO: --- finished
+[cmd-checklist-runner.py] INFO: --- passed tests: 3
+[cmd-checklist-runner.py] INFO: --- failed tests: 0
+[cmd-checklist-runner.py] INFO: --- total tests: 3
+```
+
+Uses a configuration file like this one:
+
+```yaml
+---
+- name: "uname -a works"
+  tests:
+    - cmd: uname -a | wc -l
+      retcode: 0
+      stdout: "1"
+      stderr: ""
+
+- name: "internet connectivity"
+  tests:
+    - cmd: curl -s ifconfig.me | grep -q ^[0-9]
+      retcode: 0
+      stdout: ""
+      stderr: ""
+
+- name: "systemctl is happy"
+  tests:
+    - cmd: systemctl | grep failed | wc -l
+      retcode: 0
+      stdout: "0"
+      stderr: ""
+    - cmd: systemctl is-system-running
+      retcode: 0
+      stdout: "running"
+      stderr: "
+```
+
+That's all!
+
 #### netns-events.py
 
 Watches and reacts to linux network namespace events, allows to execute arbitrary commands on such
