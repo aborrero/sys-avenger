@@ -10,34 +10,46 @@ checklist, and runs the commands for you, reporting what happened.
 
 ```console
 user@debian:~$ cmd-checklist-runner.py --help
-usage: cmd-checklist-runner.py [-h] [--checklist-file CHECKLIST_FILE] [--debug]
+usage: cmd-checklist-runner.py [-h] [--config-file CONFIG_FILE] [--debug]
 
 Utility to run arbitrary command tests
 
 optional arguments:
   -h, --help            show this help message and exit
-  --checklist-file CHECKLIST_FILE
-                        File with testcase definitions. Defaults to 'cmd-checklist.yaml'
+  --config-file CONFIG_FILE
+                        File with configuration and testcase definitions. Defaults to 'cmd-checklist-config.yaml'
   --debug               debug mode
 
-user@debian:~$ src/cmd-checklist-runner.py --checklist-file src/cmd-checklist.yaml
-[cmd-checklist-runner.py] INFO: --- running test: uname -a works
-[cmd-checklist-runner.py] INFO: --- passed test: uname -a works
-[cmd-checklist-runner.py] INFO: --- running test: internet connectivity
-[cmd-checklist-runner.py] INFO: --- passed test: internet connectivity
-[cmd-checklist-runner.py] INFO: --- running test: systemctl is happy
-[cmd-checklist-runner.py] INFO: --- passed test: systemctl is happy
+user@debian:~$ src/cmd-checklist-runner.py --config-file src/cmd-checklist.yaml
+[cmd-checklist-runner.py] INFO: running test: env test
+[cmd-checklist-runner.py] INFO: running test: uname -a works
+[cmd-checklist-runner.py] INFO: running test: internet connectivity
+[cmd-checklist-runner.py] INFO: running test: systemctl is happy
 [cmd-checklist-runner.py] INFO: ---
-[cmd-checklist-runner.py] INFO: --- finished
-[cmd-checklist-runner.py] INFO: --- passed tests: 3
+[cmd-checklist-runner.py] INFO: --- passed tests: 4
 [cmd-checklist-runner.py] INFO: --- failed tests: 0
-[cmd-checklist-runner.py] INFO: --- total tests: 3
+[cmd-checklist-runner.py] INFO: --- total tests: 4
 ```
 
 Uses a configuration file like this one:
 
 ```yaml
 ---
+- envvars:
+    - MYVAR: "myvalue"
+      MYVAR2: "myvalue2"
+---
+- name: "env test"
+  tests:
+    - cmd: echo $MYVAR
+      retcode: 0
+      stdout: "myvalue"
+      stderr: ""
+    - cmd: echo $MYVAR2
+      retcode: 0
+      stdout: "myvalue2"
+      stderr: ""
+
 - name: "uname -a works"
   tests:
     - cmd: uname -a | wc -l

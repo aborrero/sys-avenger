@@ -1,4 +1,19 @@
 ---
+- envvars:
+    - MYVAR: "myvalue"
+      MYVAR2: "myvalue2"
+---
+- name: "env test"
+  tests:
+    - cmd: echo $MYVAR
+      retcode: 0
+      stdout: "myvalue"
+      stderr: ""
+    - cmd: echo $MYVAR2
+      retcode: 0
+      stdout: "myvalue2"
+      stderr: ""
+
 - name: "uname -a works"
   tests:
     - cmd: uname -a | wc -l

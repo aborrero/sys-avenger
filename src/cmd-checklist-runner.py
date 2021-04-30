@@ -10,6 +10,11 @@
 #
 
 # checklist.yaml file format:
+#  ---
+#  - envvars:
+#      - MYVAR: "myvalue"
+#        MYVAR2: "myvalue2"
+#  ---
 #  - name: "this is a test that does something"
 #    tests:
 #      - cmd: cmd1
@@ -34,7 +39,7 @@ def read_yaml_file(file):
     try:
         with open(file, "r") as stream:
             try:
-                return yaml.safe_load(stream)
+                return [doc for doc in yaml.safe_load_all(stream)]
             except yaml.YAMLError as e:
                 logging.error(e)
                 exit(2)
@@ -54,19 +59,39 @@ def validate_dictionary(dictionary, keys):
     return True
 
 
-def stage_validate_config(args):
-    checklist_dict = read_yaml_file(args.checklist_file)
-    for definition in checklist_dict:
-        if not validate_dictionary(definition, ["name", "tests"]):
-            logging.error(f"couldn't validate file '{args.checklist_file}'")
-            return False
-        for test in definition["tests"]:
-            if not validate_dictionary(test, ["cmd", "retcode", "stdout", "stderr"]):
-                logging.error(f"couldn't validate file '{args.checklist_file}'")
-                return False
+def load_envs(envvars_dict):
+    for envvars in envvars_dict:
+        logging.debug(envvars.items())
+        for envvar in envvars.items():
+            key = envvar[0]
+            value = envvar[1]
+            logging.debug(f"will try to set envvar: {key}={value}")
+            os.environ[key] = os.getenv(key, value)
 
-    logging.debug(f"'{args.checklist_file}' seems valid")
-    ctx.checklist_dict = checklist_dict
+
+def stage_validate_config(args):
+    docs = read_yaml_file(args.config_file)
+    for doc in docs:
+        logging.debug(f"validating doc {doc}")
+
+        for definition in doc:
+            if definition.get("envvars", None):
+                load_envs(definition["envvars"])
+
+            if definition.get("name", None):
+                if not validate_dictionary(definition, ["name", "tests"]):
+                    logging.error(f"couldn't validate file '{args.config_file}'")
+                    return False
+                for test in definition["tests"]:
+                    if not validate_dictionary(
+                        test, ["cmd", "retcode", "stdout", "stderr"]
+                    ):
+                        logging.error(f"couldn't validate file '{args.config_file}'")
+                        return False
+
+                ctx.checklist_dict = doc
+
+    logging.debug(f"'{args.config_file}' seems valid")
     return True
 
 
@@ -129,9 +154,9 @@ def parse_args():
     description = "Utility to run arbitrary command tests"
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
-        "--checklist-file",
-        default="cmd-checklist.yaml",
-        help="File with testcase definitions. Defaults to '%(default)s'",
+        "--config-file",
+        default="cmd-checklist-config.yaml",
+        help="File with configuration and testcase definitions. Defaults to '%(default)s'",
     )
     parser.add_argument(
         "--debug",
