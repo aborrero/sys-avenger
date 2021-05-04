@@ -186,6 +186,8 @@ def main():
         logging_level = logging.DEBUG
     else:
         logging_level = logging.INFO
+    logging.addLevelName(logging.WARNING, "\033[1;33m%s\033[1;0m" % logging.getLevelName(logging.WARNING))
+    logging.addLevelName(logging.ERROR, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.ERROR))
     logging.basicConfig(format=logging_format, level=logging_level, stream=sys.stdout)
 
     if not stage_validate_config(args):
