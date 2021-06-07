@@ -25,10 +25,11 @@ user@debian:~$ src/cmd-checklist-runner.py --config-file src/cmd-checklist.yaml
 [cmd-checklist-runner.py] INFO: running test: uname -a works
 [cmd-checklist-runner.py] INFO: running test: internet connectivity
 [cmd-checklist-runner.py] INFO: running test: systemctl is happy
+[cmd-checklist-runner.py] INFO: running test: just run these commands
 [cmd-checklist-runner.py] INFO: ---
-[cmd-checklist-runner.py] INFO: --- passed tests: 4
+[cmd-checklist-runner.py] INFO: --- passed tests: 5
 [cmd-checklist-runner.py] INFO: --- failed tests: 0
-[cmd-checklist-runner.py] INFO: --- total tests: 4
+[cmd-checklist-runner.py] INFO: --- total tests: 5
 ```
 
 Uses a configuration file like this one:
@@ -43,18 +44,18 @@ Uses a configuration file like this one:
   tests:
     - cmd: echo $MYVAR
       retcode: 0
-      stdout: "myvalue"
+      stdout: "myvalue\n"
       stderr: ""
     - cmd: echo $MYVAR2
       retcode: 0
-      stdout: "myvalue2"
+      stdout: "myvalue2\n"
       stderr: ""
 
 - name: "uname -a works"
   tests:
     - cmd: uname -a | wc -l
       retcode: 0
-      stdout: "1"
+      stdout: "1\n"
       stderr: ""
 
 - name: "internet connectivity"
@@ -68,12 +69,20 @@ Uses a configuration file like this one:
   tests:
     - cmd: systemctl | grep failed | wc -l
       retcode: 0
-      stdout: "0"
+      stdout: "0\n"
       stderr: ""
     - cmd: systemctl is-system-running
       retcode: 0
-      stdout: "running"
-      stderr: "
+      stdout: "running\n"
+      stderr: ""
+
+# ignore values, just run the commands
+- name: "just run these commands"
+  tests:
+    - cmd: "true"
+    - cmd: "false"
+    - cmd: "true"
+    - cmd: "false"
 ```
 
 That's all!

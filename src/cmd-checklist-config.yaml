@@ -7,18 +7,18 @@
   tests:
     - cmd: echo $MYVAR
       retcode: 0
-      stdout: "myvalue"
+      stdout: "myvalue\n"
       stderr: ""
     - cmd: echo $MYVAR2
       retcode: 0
-      stdout: "myvalue2"
+      stdout: "myvalue2\n"
       stderr: ""
 
 - name: "uname -a works"
   tests:
     - cmd: uname -a | wc -l
       retcode: 0
-      stdout: "1"
+      stdout: "1\n"
       stderr: ""
 
 - name: "internet connectivity"
@@ -32,10 +32,17 @@
   tests:
     - cmd: systemctl | grep failed | wc -l
       retcode: 0
-      stdout: "0"
+      stdout: "0\n"
       stderr: ""
     - cmd: systemctl is-system-running
       retcode: 0
-      stdout: "running"
+      stdout: "running\n"
       stderr: ""
 
+# ignore values, just run the commands
+- name: "just run these commands"
+  tests:
+    - cmd: "true"
+    - cmd: "false"
+    - cmd: "true"
+    - cmd: "false"

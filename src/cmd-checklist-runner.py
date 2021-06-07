@@ -83,9 +83,7 @@ def stage_validate_config(args):
                     logging.error(f"couldn't validate file '{args.config_file}'")
                     return False
                 for test in definition["tests"]:
-                    if not validate_dictionary(
-                        test, ["cmd", "retcode", "stdout", "stderr"]
-                    ):
+                    if not validate_dictionary(test, ["cmd"]):
                         logging.error(f"couldn't validate file '{args.config_file}'")
                         return False
 
@@ -100,25 +98,34 @@ def cmd_run(cmd, expected_retcode, expected_stdout, expected_stderr):
     logging.debug(f"running command: {cmd}")
     r = subprocess.run(cmd, capture_output=True, shell=True)
 
-    if r.returncode != expected_retcode:
-        logging.warning(
-            f"cmd '{cmd}', expected return code '{expected_retcode}', but got '{r.returncode}'"
-        )
-        success = False
+    if expected_retcode is not None:
+        if r.returncode != expected_retcode:
+            logging.warning(
+                f"cmd '{cmd}', expected return code '{expected_retcode}', but got '{r.returncode}'"
+            )
+            success = False
+    else:
+        logging.debug("no retcode defined for command, ignoring")
 
-    stdout = r.stdout.decode("utf-8").strip()
-    if stdout != expected_stdout:
-        logging.warning(
-            f"cmd '{cmd}', expected stdout '{expected_stdout}', but got '{stdout}'"
-        )
-        success = False
+    if expected_stdout is not None:
+        stdout = r.stdout.decode("utf-8")
+        if stdout != expected_stdout:
+            logging.warning(
+                f"cmd '{cmd}', expected stdout '{expected_stdout}', but got '{stdout}'"
+            )
+            success = False
+    else:
+        logging.debug("no stdout defined for command, ignoring")
 
-    stderr = r.stderr.decode("utf-8").strip()
-    if stderr != expected_stderr:
-        logging.warning(
-            f"cmd '{cmd}', expected stderr '{expected_stderr}', but got '{stderr}'"
-        )
-        success = False
+    if expected_stderr is not None:
+        stderr = r.stderr.decode("utf-8").strip()
+        if stderr != expected_stderr:
+            logging.warning(
+                f"cmd '{cmd}', expected stderr '{expected_stderr}', but got '{stderr}'"
+            )
+            success = False
+    else:
+        logging.debug("no stderr defined for command, ignoring")
 
     return success
 
@@ -127,7 +134,12 @@ def test_run(test_definition):
     logging.info("running test: {}".format(test_definition["name"]))
 
     for test in test_definition["tests"]:
-        if cmd_run(test["cmd"], test["retcode"], test["stdout"], test["stderr"]):
+        if cmd_run(
+            test["cmd"],
+            test.get("retcode", None),
+            test.get("stdout", None),
+            test.get("stderr", None),
+        ):
             continue
 
         logging.warning("failed test: {}".format(test_definition["name"]))
@@ -158,11 +170,7 @@ def parse_args():
         default="cmd-checklist-config.yaml",
         help="File with configuration and testcase definitions. Defaults to '%(default)s'",
     )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="debug mode",
-    )
+    parser.add_argument("--debug", action="store_true", help="debug mode")
 
     return parser.parse_args()
 
@@ -186,8 +194,12 @@ def main():
         logging_level = logging.DEBUG
     else:
         logging_level = logging.INFO
-    logging.addLevelName(logging.WARNING, "\033[1;33m%s\033[1;0m" % logging.getLevelName(logging.WARNING))
-    logging.addLevelName(logging.ERROR, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.ERROR))
+    logging.addLevelName(
+        logging.WARNING, "\033[1;33m%s\033[1;0m" % logging.getLevelName(logging.WARNING)
+    )
+    logging.addLevelName(
+        logging.ERROR, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.ERROR)
+    )
     logging.basicConfig(format=logging_format, level=logging_level, stream=sys.stdout)
 
     if not stage_validate_config(args):
