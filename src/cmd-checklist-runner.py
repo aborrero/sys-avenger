@@ -28,6 +28,8 @@
 #
 
 import os
+import socket
+import platform
 import sys
 import argparse
 import subprocess
@@ -188,6 +190,25 @@ def parse_args():
     return parser.parse_args()
 
 
+def stage_report_node_info():
+    hostname = socket.gethostname()
+
+    os = "[unknown OS]"
+    try:
+        with open("/etc/os-release", "r") as f:
+            for line in f.readlines():
+                if line.startswith("PRETTY_NAME="):
+                    os = line.split("PRETTY_NAME=")[1].strip().strip('"')
+                    break
+    except Exception:
+        pass
+
+    release = platform.release()
+
+    logging.info(f"--- {hostname} {os} {release}")
+    logging.info("---")
+
+
 class Context:
     def __init__(self):
         self.checklist_dict = None
@@ -202,7 +223,8 @@ ctx = Context()
 def main():
     args = parse_args()
 
-    logging_format = "[%(filename)s] %(levelname)s: %(message)s"
+    logging_format = "[%(asctime)s] %(levelname)s: %(message)s"
+    date_format = "%Y-%m-%d %H:%M:%S"
     if args.debug:
         logging_level = logging.DEBUG
     else:
@@ -213,7 +235,11 @@ def main():
     logging.addLevelName(
         logging.ERROR, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.ERROR)
     )
-    logging.basicConfig(format=logging_format, level=logging_level, stream=sys.stdout)
+    logging.basicConfig(
+        format=logging_format, level=logging_level, stream=sys.stdout, datefmt=date_format
+    )
+
+    stage_report_node_info()
 
     if not stage_validate_config(args):
         sys.exit(1)
