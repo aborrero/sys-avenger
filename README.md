@@ -10,7 +10,7 @@ checklist, and runs the commands for you, reporting what happened.
 
 ```console
 user@debian:~$ cmd-checklist-runner.py --help
-usage: cmd-checklist-runner.py [-h] [--config-file CONFIG_FILE] [--debug]
+usage: cmd-checklist-runner.py [-h] [--config-file CONFIG_FILE] [--debug] [--exit-code-fail]
 
 Utility to run arbitrary command tests
 
@@ -19,6 +19,7 @@ optional arguments:
   --config-file CONFIG_FILE
                         File with configuration and testcase definitions. Defaults to 'cmd-checklist-config.yaml'
   --debug               debug mode
+  --exit-code-fail      report in the exit code if a check fails
 
 user@debian:~$ src/cmd-checklist-runner.py --config-file src/cmd-checklist.yaml
 [cmd-checklist-runner.py] INFO: running test: env test
