@@ -40,11 +40,7 @@ import logging
 def read_yaml_file(file):
     try:
         with open(file, "r") as stream:
-            try:
-                return [doc for doc in yaml.safe_load_all(stream)]
-            except yaml.YAMLError as e:
-                logging.error(e)
-                exit(2)
+            return [doc for doc in yaml.safe_load_all(stream)]
     except FileNotFoundError as e:
         logging.error(e)
         exit(2)
