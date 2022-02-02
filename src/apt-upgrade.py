@@ -21,7 +21,7 @@ import re
 
 
 def print_output_pkg(tag, pkg):
-    """ print information about a package
+    """print information about a package
     :param tag: str
     :param pkg: Package
     """
@@ -40,11 +40,11 @@ def print_output_pkg(tag, pkg):
         vdest = pkg.candidate.version
     else:
         vdest = "[remove]"
-    logging.info('{}/{}: {} {} --> {} {}'.format(archive, component, name, vorig, vdest, tag))
+    logging.info("{}/{}: {} {} --> {} {}".format(archive, component, name, vorig, vdest, tag))
 
 
 def pkg_upgrade(pkg):
-    """ try to mark a package for upgrade
+    """try to mark a package for upgrade
     :param pkg: Package
     """
     if not pkg.is_installed:
@@ -53,7 +53,7 @@ def pkg_upgrade(pkg):
         pkg.mark_upgrade()
         marked_upgrade = True
     except apt_pkg.Error as e:
-        logging.info('{} not for upgrade: {}'.format(pkg.name, str(e)))
+        logging.info("{} not for upgrade: {}".format(pkg.name, str(e)))
         pkg.mark_keep()
         marked_upgrade = False
 
@@ -61,7 +61,7 @@ def pkg_upgrade(pkg):
 
 
 class AptFilterUpgradeableSrc(apt.cache.Filter):
-    """ filter for python-apt cache to filter only packages upgradeable from a
+    """filter for python-apt cache to filter only packages upgradeable from a
     specific source (archive and component).
     """
 
@@ -71,7 +71,7 @@ class AptFilterUpgradeableSrc(apt.cache.Filter):
         self.component = component
 
     def apply(self, pkg):
-        """ filtering function: installed and upgradeable pkgs, from a given
+        """filtering function: installed and upgradeable pkgs, from a given
         source (archive and component).
         :param pkg: Package
         """
@@ -88,11 +88,10 @@ class AptFilterUpgradeableSrc(apt.cache.Filter):
 
 
 class AptFilterUpgradeable(apt.cache.Filter):
-    """ filter for python-apt cache to get only upgradeable packages.
-    """
+    """filter for python-apt cache to get only upgradeable packages."""
 
     def apply(self, pkg):
-        """ filtering function: installed and upgradeable pkgs
+        """filtering function: installed and upgradeable pkgs
         :param pkg: Package
         """
 
@@ -103,14 +102,14 @@ class AptFilterUpgradeable(apt.cache.Filter):
 
 
 def sort_pkgs_by_archive(pkg_list):
-    """ sort packages by the archive attribute of the origin of the candidate version
+    """sort packages by the archive attribute of the origin of the candidate version
     :param pkg_list: Package list
     """
     return sorted(pkg_list, key=lambda pkg: pkg.candidate.origins[0].archive)
 
 
 def exclude_packages(pkg_list, exclude_regex_set):
-    """ exclude packages (mark as keep) if the match a regex in the set
+    """exclude packages (mark as keep) if the match a regex in the set
     :param cache: apt.Cache
     :param file: str
     :param exclude_regex_file: set(regex)
@@ -123,7 +122,7 @@ def exclude_packages(pkg_list, exclude_regex_set):
 
 
 def calculate_upgrades(cache, exclude_regex_set):
-    """ calculate upgrades and print the changes
+    """calculate upgrades and print the changes
     :param cache: apt.Cache
     :param exclude_regex_set: set(regex)
     """
@@ -142,13 +141,13 @@ def calculate_upgrades(cache, exclude_regex_set):
 
 
 def run_upgrade(cache, archive, confirm, exclude_regex_set):
-    """ main upgrade routine: calculate upgrades and commit them
+    """main upgrade routine: calculate upgrades and commit them
     :param cache: apt.Cache
     :param archive: str
     :param confirm: boolean
     :param exclude_regex_set: set(regex)
     """
-    string_list = archive.split('/', 1)
+    string_list = archive.split("/", 1)
     dist = string_list[0]  # the parser verified this exists
     comp = string_list[1] if len(string_list) > 1 else None
     cache.set_filter(AptFilterUpgradeableSrc(dist, comp))
@@ -158,7 +157,7 @@ def run_upgrade(cache, archive, confirm, exclude_regex_set):
             repo = "{}/{}".format(dist, comp)
         else:
             repo = dist
-        logging.info('no packages found to upgrade from {}'.format(repo))
+        logging.info("no packages found to upgrade from {}".format(repo))
         return
 
     if not confirm:
@@ -170,13 +169,13 @@ def run_upgrade(cache, archive, confirm, exclude_regex_set):
 
 
 def run_report(cache, archive, exclude_regex_set):
-    """ calculate upgrades and report them
+    """calculate upgrades and report them
     :param cache: apt.Cache
     :param archive: str
     :param exclude_regex_set: set(regex)
     """
     if archive:
-        string_list = archive.split('/', 1)
+        string_list = archive.split("/", 1)
         dist = string_list[0]
         comp = string_list[1] if len(string_list) > 1 else None
         cache.set_filter(AptFilterUpgradeableSrc(dist, comp))
@@ -187,7 +186,7 @@ def run_report(cache, archive, exclude_regex_set):
 
 
 def run_list(cache, exclude_regex_set):
-    """ list available archives from which packages can be upgraded
+    """list available archives from which packages can be upgraded
     :param cache: apt.Cache
     :param exclude_regex_set: set(regex)
     """
@@ -213,7 +212,7 @@ def run_list(cache, exclude_regex_set):
 
 
 def exclude_regex_set(exclude_file, exclude_list):
-    """ calculates a list of regex to exclude files
+    """calculates a list of regex to exclude files
     :param exclude_file: str (file)
     :param exclude_list: list(str)
     """
@@ -229,7 +228,7 @@ def exclude_regex_set(exclude_file, exclude_list):
         try:
             f = open(exclude_file)
         except OSError as e:
-            logging.warning("can't open exclude file: {}". format(e))
+            logging.warning("can't open exclude file: {}".format(e))
             return regex_set
 
         for line in f.readlines():
@@ -245,23 +244,25 @@ def main():
     parser = argparse.ArgumentParser(description="Utility to help with upgrades of packages")
     parser.add_argument("-u", action="store_true", help="don't run cache update")
     parser.add_argument("-n", action="store_true", help="don't print the node name")
-    parser.add_argument("-f", "--exclude-file",
-                        help="read file (a regex per line) with packages to be excluded")
-    parser.add_argument("-x", "--exclude", action="append",
-                        help="a regex of packages to be excluded")
-    subparser = parser.add_subparsers(help="possible operations (pass -h to know usage of each)",
-                                      dest="operation")
+    parser.add_argument(
+        "-f", "--exclude-file", help="read file (a regex per line) with packages to be excluded"
+    )
+    parser.add_argument(
+        "-x", "--exclude", action="append", help="a regex of packages to be excluded"
+    )
+    subparser = parser.add_subparsers(
+        help="possible operations (pass -h to know usage of each)", dest="operation"
+    )
     subparser.add_parser("list", help="list available sources of upgrades")
-    upgrade_parser = subparser.add_parser("upgrade",
-                                          help="upgrade packages from a given archive")
-    upgrade_parser.add_argument("archive", action="store",
-                                help="archive to upgrade packages from")
-    upgrade_parser.add_argument("-y", action="store_true",
-                                help="actually perform changes (will prompt otherwise)")
-    report_parser = subparser.add_parser("report",
-                                         help="report pending package upgrades")
-    report_parser.add_argument("archive", action="store", nargs="?",
-                               help="archive to report pending upgrades from")
+    upgrade_parser = subparser.add_parser("upgrade", help="upgrade packages from a given archive")
+    upgrade_parser.add_argument("archive", action="store", help="archive to upgrade packages from")
+    upgrade_parser.add_argument(
+        "-y", action="store_true", help="actually perform changes (will prompt otherwise)"
+    )
+    report_parser = subparser.add_parser("report", help="report pending package upgrades")
+    report_parser.add_argument(
+        "archive", action="store", nargs="?", help="archive to report pending upgrades from"
+    )
 
     args = parser.parse_args()
 
@@ -278,7 +279,7 @@ def main():
         logging_format = "{}: %(message)s".format(socket.gethostname())
 
     logging.basicConfig(format=logging_format, level=logging.INFO, stream=sys.stdout)
-    os.environ['DEBIAN_FRONTEND'] = "noninteractive"
+    os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 
     try:
         cache = apt.cache.FilteredCache()

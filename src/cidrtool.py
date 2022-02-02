@@ -39,7 +39,7 @@ def print_subnet_info(cidr, diff_level):
         print("CIDR:\t\t{}".format(cidr))
         print("")
 
-    indent=" " * diff_level
+    indent = " " * diff_level
     if diff_level > 0:
         fancy_thing = "==" * diff_level
         print("{}{} potential subnet {}".format(indent, fancy_thing, fancy_thing))
@@ -68,7 +68,7 @@ def print_subnet_info(cidr, diff_level):
     print("{}hosts number:\t{}".format(indent, nhost))
 
 
-def subnet_calc(subnet, recurse = False, diff_level = 0):
+def subnet_calc(subnet, recurse=False, diff_level=0):
     try:
         cidr = ipaddress.IPv4Interface(subnet)
     except ValueError as e:
@@ -78,26 +78,24 @@ def subnet_calc(subnet, recurse = False, diff_level = 0):
     print_subnet_info(cidr, diff_level)
 
     if not recurse or cidr.network.prefixlen == 32:
-       return
+        return
 
     diff_level = 1
-    for subnet in cidr.network.subnets(prefixlen_diff = diff_level):
+    for subnet in cidr.network.subnets(prefixlen_diff=diff_level):
         print("")
-        subnet_calc(subnet.exploded, diff_level = diff_level)
+        subnet_calc(subnet.exploded, diff_level=diff_level)
 
     if cidr.network.prefixlen >= 31:
-       return
+        return
 
     diff_level = 2
-    for subnet in cidr.network.subnets(prefixlen_diff = diff_level):
+    for subnet in cidr.network.subnets(prefixlen_diff=diff_level):
         print("")
-        subnet_calc(subnet.exploded, diff_level = diff_level)
+        subnet_calc(subnet.exploded, diff_level=diff_level)
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Utility to calculate information on an IPv4 CIDR"
-    )
+    parser = argparse.ArgumentParser(description="Utility to calculate information on an IPv4 CIDR")
     parser.add_argument("cidr", action="store", help="IPv4 CIDR to use")
     parser.add_argument("-s", action="store_true", help="show potential subnets")
     args = parser.parse_args()
@@ -105,7 +103,7 @@ def main():
     logging_format = "%(levelname)s: %(message)s"
     logging.basicConfig(format=logging_format, level=logging.INFO)
 
-    subnet_calc(args.cidr, recurse = args.s, diff_level = 0)
+    subnet_calc(args.cidr, recurse=args.s, diff_level=0)
 
 
 if __name__ == "__main__":

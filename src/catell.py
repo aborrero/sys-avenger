@@ -27,24 +27,34 @@ import argparse
 import re
 from subprocess import Popen, PIPE, STDOUT
 
-def file_read(file):
-	"Returns contents of file with name `file`."
-	with open(file, 'r') as f:
-		return f.read()
 
-regexp = re.compile(u"""-----BEGIN CERTIFICATE-----\r?
+def file_read(file):
+    "Returns contents of file with name `file`."
+    with open(file, "r") as f:
+        return f.read()
+
+
+regexp = re.compile(
+    """-----BEGIN CERTIFICATE-----\r?
 .+?
------END CERTIFICATE-----""", re.DOTALL)
+-----END CERTIFICATE-----""",
+    re.DOTALL,
+)
 
 parser = argparse.ArgumentParser(description="Print ca bundle information")
-parser.add_argument('file', nargs='+', help="ca bundle file")
+parser.add_argument("file", nargs="+", help="ca bundle file")
 args = parser.parse_args()
 
 for input_file in args.file:
-	i = 1
-	for match in re.findall(regexp, file_read(input_file)):
-		print("--> certificate", i, "in file", input_file)
-		p = Popen(["openssl", "x509", "-noout", "-subject", "-issuer"], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-		openssl_stdout = p.communicate(input = match.encode())[0]
-		print(openssl_stdout.decode())
-		i = i + 1
+    i = 1
+    for match in re.findall(regexp, file_read(input_file)):
+        print("--> certificate", i, "in file", input_file)
+        p = Popen(
+            ["openssl", "x509", "-noout", "-subject", "-issuer"],
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=STDOUT,
+        )
+        openssl_stdout = p.communicate(input=match.encode())[0]
+        print(openssl_stdout.decode())
+        i = i + 1

@@ -28,7 +28,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 # requires the python3-dnspython (debian)
 
-import sys
 import argparse
 import dns.resolver
 import dns.reversename
@@ -144,8 +143,6 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("fqdns", nargs="+", help="FQDNs to check")
     args = parser.parse_args()
-
-    verbose = args.verbose
 
     if not fqdns_symmetry(args.fqdns):
         exit(1)

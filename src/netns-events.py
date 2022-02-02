@@ -62,9 +62,7 @@ def validate_dict(dictionary, keys):
 def config_load(config_file):
     config_dicts = read_yaml_file(config_file)
     for entry in config_dicts:
-        validate_dict(
-            entry, ["netns_regex", "inotify_actions", "daemon_startup_actions"]
-        )
+        validate_dict(entry, ["netns_regex", "inotify_actions", "daemon_startup_actions"])
         for inotify_actions in entry["inotify_actions"]:
             for action in inotify_actions:
                 if action not in pyinotify.EventsCodes.ALL_FLAGS:
@@ -91,9 +89,7 @@ def parse_args():
         help="YAML configuration file. Defaults to '%(default)s'",
         default="/etc/netns-events-config.yaml",
     )
-    parser.add_argument(
-        "--list-events", action="store_true", help="list pyinotify events and exit"
-    )
+    parser.add_argument("--list-events", action="store_true", help="list pyinotify events and exit")
     return parser.parse_args()
 
 
@@ -146,9 +142,7 @@ class NetnsEventProcessor(pyinotify.ProcessEvent):
             netns_regex = config_dict["netns_regex"]
             if not netns_regex.match(event.name):
                 # not interested in any events for this netns
-                logging.debug(
-                    f"regex '{netns_regex.pattern}' didn't match '{event.name}'"
-                )
+                logging.debug(f"regex '{netns_regex.pattern}' didn't match '{event.name}'")
                 continue
 
             logging.debug(f"regex '{netns_regex.pattern}' matched '{event.name}'")
@@ -156,9 +150,7 @@ class NetnsEventProcessor(pyinotify.ProcessEvent):
                 for action in inotify_actions:
                     if event.maskname.find(action) < 0:
                         # not interested in this kind of event in this netns
-                        logging.debug(
-                            f"event maskname {event.maskname} didn't contain {action}"
-                        )
+                        logging.debug(f"event maskname {event.maskname} didn't contain {action}")
                         continue
 
                     logging.info(
@@ -176,9 +168,7 @@ def run_loop(configs):
     netns_notifier = pyinotify.Notifier(netns_wm, default_proc_fun=netns_handler)
     while True:
         try:
-            wd = netns_wm.add_watch(
-                "/var/run/netns/", pyinotify.ALL_EVENTS, quiet=False
-            )
+            wd = netns_wm.add_watch("/var/run/netns/", pyinotify.ALL_EVENTS, quiet=False)
             for w in wd:
                 if wd[w] < 0:
                     logging.critical("Failed to introduce /var/run/netns watch")
