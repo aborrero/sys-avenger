@@ -37,6 +37,10 @@ import yaml
 import logging
 
 
+class InvalidConfigError(Exception):
+    """Class to represent an invalid configuration error."""
+
+
 def read_yaml_file(file):
     try:
         with open(file, "r") as stream:
@@ -48,13 +52,10 @@ def read_yaml_file(file):
 
 def validate_dictionary(dictionary, keys):
     if not isinstance(dictionary, dict):
-        logging.error(f"not a dictionary:\n{dictionary}")
-        return False
+        raise InvalidConfigError(f"not a dictionary:\n{dictionary}")
     for key in keys:
         if dictionary.get(key) is None:
-            logging.error(f"missing key '{key}' in dictionary:\n{dictionary}")
-            return False
-    return True
+            raise InvalidConfigError(f"missing key '{key}' in dictionary:\n{dictionary}")
 
 
 def load_envs(envvars_dict):
@@ -77,18 +78,13 @@ def stage_validate_config(args):
                 load_envs(definition["envvars"])
 
             if definition.get("name", None):
-                if not validate_dictionary(definition, ["name", "tests"]):
-                    logging.error(f"couldn't validate file '{args.config_file}'")
-                    return False
+                validate_dictionary(definition, ["name", "tests"])
                 for test in definition["tests"]:
-                    if not validate_dictionary(test, ["cmd"]):
-                        logging.error(f"couldn't validate file '{args.config_file}'")
-                        return False
+                    validate_dictionary(test, ["cmd"])
 
                 ctx.checklist_dict = doc
 
     logging.debug(f"'{args.config_file}' seems valid")
-    return True
 
 
 def cmd_run(cmd, expected_retcode, expected_stdout, expected_stderr):
@@ -235,10 +231,13 @@ def main():
         format=logging_format, level=logging_level, stream=sys.stdout, datefmt=date_format
     )
 
-    stage_report_node_info()
-
-    if not stage_validate_config(args):
+    try:
+        stage_validate_config(args)
+    except InvalidConfigError as e:
+        logging.error(f"couldn't validate file '{args.config_file}': {e}")
         sys.exit(1)
+
+    stage_report_node_info()
     stage_run_tests(args)
     stage_report(args)
 
