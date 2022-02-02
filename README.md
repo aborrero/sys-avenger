@@ -22,15 +22,17 @@ optional arguments:
   --exit-code-fail      report in the exit code if a check fails
 
 user@debian:~$ src/cmd-checklist-runner.py --config-file src/cmd-checklist.yaml
-[cmd-checklist-runner.py] INFO: running test: env test
-[cmd-checklist-runner.py] INFO: running test: uname -a works
-[cmd-checklist-runner.py] INFO: running test: internet connectivity
-[cmd-checklist-runner.py] INFO: running test: systemctl is happy
-[cmd-checklist-runner.py] INFO: running test: just run these commands
-[cmd-checklist-runner.py] INFO: ---
-[cmd-checklist-runner.py] INFO: --- passed tests: 5
-[cmd-checklist-runner.py] INFO: --- failed tests: 0
-[cmd-checklist-runner.py] INFO: --- total tests: 5
+[2022-02-02 14:43:27] INFO: --- nostromo Debian GNU/Linux bookworm/sid 5.15.0-3-amd64
+[2022-02-02 14:43:27] INFO: ---
+[2022-02-02 14:43:27] INFO: running test: env test
+[2022-02-02 14:43:27] INFO: running test: uname -a works
+[2022-02-02 14:43:27] INFO: running test: internet connectivity
+[2022-02-02 14:43:27] INFO: running test: systemctl is happy
+[2022-02-02 14:43:27] INFO: running test: just run these commands
+[2022-02-02 14:43:27] INFO: ---
+[2022-02-02 14:43:27] INFO: --- passed tests: 5
+[2022-02-02 14:43:27] INFO: --- failed tests: 0
+[2022-02-02 14:43:27] INFO: --- total tests: 5
 ```
 
 Uses a configuration file like this one:
@@ -45,18 +47,18 @@ Uses a configuration file like this one:
   tests:
     - cmd: echo $MYVAR
       retcode: 0
-      stdout: "myvalue\n"
+      stdout: "myvalue"
       stderr: ""
     - cmd: echo $MYVAR2
       retcode: 0
-      stdout: "myvalue2\n"
+      stdout: "myvalue2"
       stderr: ""
 
 - name: "uname -a works"
   tests:
     - cmd: uname -a | wc -l
       retcode: 0
-      stdout: "1\n"
+      stdout: "1"
       stderr: ""
 
 - name: "internet connectivity"
@@ -70,11 +72,11 @@ Uses a configuration file like this one:
   tests:
     - cmd: systemctl | grep failed | wc -l
       retcode: 0
-      stdout: "0\n"
+      stdout: "0"
       stderr: ""
     - cmd: systemctl is-system-running
       retcode: 0
-      stdout: "running\n"
+      stdout: "running"
       stderr: ""
 
 # ignore values, just run the commands
