@@ -36,6 +36,7 @@ import subprocess
 import yaml
 import logging
 from dataclasses import dataclass
+from enum import Enum, auto
 from typing import Optional, List
 
 
@@ -43,9 +44,17 @@ class InvalidConfigError(Exception):
     """Class to represent an invalid configuration error."""
 
 
+class TestResult(Enum):
+    """Class to represent a test result."""
+
+    NOTRUN = auto()
+    OK = auto()
+    FAILED = auto()
+
+
 @dataclass(frozen=True)
 class Command:
-    """Class to repesent a command to be executed."""
+    """Class to represent a command to be executed."""
 
     cmd: str
     retcode: Optional[int]
@@ -53,12 +62,13 @@ class Command:
     stderr: Optional[str]
 
 
-@dataclass(frozen=True)
+@dataclass()
 class Test:
     """Class to represent a test to be executed."""
 
     name: str
     spec: List[Command]
+    result: Optional[TestResult]
 
 
 @dataclass(frozen=True)
@@ -75,6 +85,7 @@ class Config:
 
     envvars: Optional[List[Envvar]]
     tests: List[Test]
+    exit_code_fail: Optional[bool] = False
 
 
 def read_yaml_file(file):
@@ -102,7 +113,7 @@ def load_envs(config: Config):
         os.environ[key] = os.getenv(key, value)
 
 
-def stage_validate_config(args):
+def stage_validate_config(args) -> Config:
     envvars = []
     tests = []
 
@@ -132,11 +143,11 @@ def stage_validate_config(args):
 
                     test_cmds.append(cmd)
 
-                test = Test(name=definition.get("name"), spec=test_cmds)
+                test = Test(name=definition.get("name"), spec=test_cmds, result=TestResult.NOTRUN)
                 tests.append(test)
 
-    ctx.config = Config(envvars=envvars, tests=tests)
     logging.debug(f"'{args.config_file}' seems valid")
+    return Config(envvars=envvars, tests=tests, exit_code_fail=args.exit_code_fail)
 
 
 def cmd_run(command: Command) -> bool:
@@ -190,28 +201,36 @@ def test_run(test: Test):
             continue
 
         logging.warning(f"failed test: {test.name}")
-        ctx.counter_test_failed += 1
+        test.result = TestResult.FAILED
         return
 
-    ctx.counter_test_ok += 1
+    test.result = TestResult.OK
 
 
-def stage_run_tests():
-    load_envs(ctx.config)
+def stage_run_tests(config: Config):
+    load_envs(config)
 
-    for test in ctx.config.tests:
+    for test in config.tests:
         test_run(test)
 
 
-def stage_report(args):
+def stage_report(config: Config):
+
+    tests_ok = 0
+    tests_failed = 0
+    for test in config.tests:
+        if test.result == TestResult.OK:
+            tests_ok += 1
+        elif test.result == TestResult.FAILED:
+            tests_failed += 1
+
     logging.info("---")
-    total = ctx.counter_test_ok + ctx.counter_test_failed
-    logging.info("--- passed tests: {}".format(ctx.counter_test_ok))
-    logging.info("--- failed tests: {}".format(ctx.counter_test_failed))
-    logging.info("--- total tests: {}".format(total))
+    logging.info(f"--- passed tests: {tests_ok}")
+    logging.info(f"--- failed tests: {tests_failed}")
+    logging.info(f"--- total tests: {tests_ok + tests_failed}")
 
     exit_code = 0
-    if args.exit_code_fail and ctx.counter_test_failed > 0:
+    if config.exit_code_fail and tests_failed > 0:
         exit_code = 1
 
     sys.exit(exit_code)
@@ -254,17 +273,6 @@ def stage_report_node_info():
     logging.info("---")
 
 
-class Context:
-    def __init__(self):
-        self.checklist_dict = None
-        self.counter_test_failed = 0
-        self.counter_test_ok = 0
-
-
-# global data
-ctx = Context()
-
-
 def main():
     args = parse_args()
 
@@ -285,14 +293,14 @@ def main():
     )
 
     try:
-        stage_validate_config(args)
+        config = stage_validate_config(args)
     except InvalidConfigError as e:
         logging.error(f"couldn't validate file '{args.config_file}': {e}")
         sys.exit(1)
 
     stage_report_node_info()
-    stage_run_tests()
-    stage_report(args)
+    stage_run_tests(config)
+    stage_report(config)
 
 
 if __name__ == "__main__":
