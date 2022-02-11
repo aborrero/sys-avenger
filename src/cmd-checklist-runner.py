@@ -92,7 +92,7 @@ def read_yaml_file(file):
     try:
         with open(file, "r") as stream:
             return [doc for doc in yaml.safe_load_all(stream)]
-    except FileNotFoundError as e:
+    except Exception as e:
         logging.error(e)
         exit(2)
 
