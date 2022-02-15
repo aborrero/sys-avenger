@@ -38,6 +38,7 @@ import logging
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Optional, List
+from pathlib import Path
 
 
 class InvalidConfigError(Exception):
@@ -50,6 +51,9 @@ class TestResult(Enum):
     NOTRUN = auto()
     OK = auto()
     FAILED = auto()
+
+    def __str__(self):
+        return self.name.lower()
 
 
 @dataclass(frozen=True)
@@ -69,6 +73,9 @@ class Test:
     name: str
     spec: List[Command]
     result: Optional[TestResult]
+
+    def get_prometheus_labels(self) -> str:
+        return f'test_name="{self.name}", test_result="{self.result}"'
 
 
 @dataclass(frozen=True)
@@ -100,6 +107,9 @@ class SystemInformation:
         except Exception:
             pass
 
+    def get_prometheus_labels(self) -> str:
+        return f'hostname="{self.hostname}", os="{self.os}", release="{self.release}"'
+
     def __str__(self):
         return f"{self.hostname} {self.os} {self.release}"
 
@@ -108,13 +118,47 @@ class SystemInformation:
 class Runner:
     """Class to represent user configuration and runtime information."""
 
+    config_file: str
     envvars: Optional[List[Envvar]]
     tests: List[Test]
     exit_code_fail: Optional[bool] = False
+    prometheus_file: Optional[str] = None
     system_information: SystemInformation = field(init=False)
+    _PROMETHEUS_METRIC: str = field(init=False, default="cmd_checklist_runner")
 
     def __post_init__(self):
         self.system_information = SystemInformation()
+        self.config_file = os.path.abspath(self.config_file)
+
+    def _get_prometheus_file_content(self) -> str:
+        content = ""
+        for test in self.tests:
+            content += f"{self._PROMETHEUS_METRIC}{{"
+            content += f'config_file="{self.config_file}", '
+            content += test.get_prometheus_labels()
+            content += ", "
+            content += self.system_information.get_prometheus_labels()
+            content += "} 1\n"
+
+        return content
+
+    def write_prometheus_file(self) -> None:
+        if not self.prometheus_file:
+            return
+
+        content = self._get_prometheus_file_content()
+        logging.debug(
+            f"generating prometheus file '{self.prometheus_file}' with content:\n{content}"
+        )
+
+        temp_file = f"{self.prometheus_file}~"
+        try:
+            with open(temp_file, "w") as f:
+                f.write(self._get_prometheus_file_content())
+
+            Path(temp_file).rename(self.prometheus_file)
+        except Exception as e:
+            logging.error(e)
 
 
 def read_yaml_file(file):
@@ -176,7 +220,13 @@ def stage_validate_config(args) -> Runner:
                 tests.append(test)
 
     logging.debug(f"'{args.config_file}' seems valid")
-    return Runner(envvars=envvars, tests=tests, exit_code_fail=args.exit_code_fail)
+    return Runner(
+        config_file=args.config_file,
+        envvars=envvars,
+        tests=tests,
+        exit_code_fail=args.exit_code_fail,
+        prometheus_file=args.prometheus_output_file,
+    )
 
 
 def cmd_run(command: Command) -> bool:
@@ -258,6 +308,8 @@ def stage_report(runner: Runner):
     logging.info(f"--- failed tests: {tests_failed}")
     logging.info(f"--- total tests: {tests_ok + tests_failed}")
 
+    runner.write_prometheus_file()
+
     exit_code = 0
     if runner.exit_code_fail and tests_failed > 0:
         exit_code = 1
@@ -279,7 +331,11 @@ def parse_args():
         action="store_true",
         help="report in the exit code if a check fails",
     )
-
+    parser.add_argument(
+        "--prometheus-output-file",
+        required=False,
+        help="If provided, generate a prom file with results from the testsuite",
+    )
     return parser.parse_args()
 
 
