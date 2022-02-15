@@ -35,7 +35,7 @@ import argparse
 import subprocess
 import yaml
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Optional, List
 
@@ -79,13 +79,42 @@ class Envvar:
     value: str
 
 
-@dataclass(frozen=True)
-class Config:
-    """Class to represent user configuration."""
+@dataclass()
+class SystemInformation:
+    """Class to represent system information."""
+
+    hostname: str = field(init=False)
+    release: str = field(init=False)
+    os: str = field(init=False)
+
+    def __post_init__(self):
+        self.hostname = socket.gethostname()
+        self.release = platform.release()
+        self.os = "[unknown OS]"
+        try:
+            with open("/etc/os-release", "r") as f:
+                for line in f.readlines():
+                    if line.startswith("PRETTY_NAME="):
+                        self.os = line.split("PRETTY_NAME=")[1].strip().strip('"')
+                        break
+        except Exception:
+            pass
+
+    def __str__(self):
+        return f"{self.hostname} {self.os} {self.release}"
+
+
+@dataclass()
+class Runner:
+    """Class to represent user configuration and runtime information."""
 
     envvars: Optional[List[Envvar]]
     tests: List[Test]
     exit_code_fail: Optional[bool] = False
+    system_information: SystemInformation = field(init=False)
+
+    def __post_init__(self):
+        self.system_information = SystemInformation()
 
 
 def read_yaml_file(file):
@@ -105,15 +134,15 @@ def validate_dictionary(dictionary, keys):
             raise InvalidConfigError(f"missing key '{key}' in dictionary:\n{dictionary}")
 
 
-def load_envs(config: Config):
-    for envvar in config.envvars:
+def load_envs(runner: Runner):
+    for envvar in runner.envvars:
         key = envvar.key
         value = envvar.value
         logging.debug(f"will try to set envvar: {key}={value}")
         os.environ[key] = os.getenv(key, value)
 
 
-def stage_validate_config(args) -> Config:
+def stage_validate_config(args) -> Runner:
     envvars = []
     tests = []
 
@@ -147,7 +176,7 @@ def stage_validate_config(args) -> Config:
                 tests.append(test)
 
     logging.debug(f"'{args.config_file}' seems valid")
-    return Config(envvars=envvars, tests=tests, exit_code_fail=args.exit_code_fail)
+    return Runner(envvars=envvars, tests=tests, exit_code_fail=args.exit_code_fail)
 
 
 def cmd_run(command: Command) -> bool:
@@ -207,18 +236,18 @@ def test_run(test: Test):
     test.result = TestResult.OK
 
 
-def stage_run_tests(config: Config):
-    load_envs(config)
+def stage_run_tests(runner: Runner):
+    load_envs(runner)
 
-    for test in config.tests:
+    for test in runner.tests:
         test_run(test)
 
 
-def stage_report(config: Config):
+def stage_report(runner: Runner):
 
     tests_ok = 0
     tests_failed = 0
-    for test in config.tests:
+    for test in runner.tests:
         if test.result == TestResult.OK:
             tests_ok += 1
         elif test.result == TestResult.FAILED:
@@ -230,7 +259,7 @@ def stage_report(config: Config):
     logging.info(f"--- total tests: {tests_ok + tests_failed}")
 
     exit_code = 0
-    if config.exit_code_fail and tests_failed > 0:
+    if runner.exit_code_fail and tests_failed > 0:
         exit_code = 1
 
     sys.exit(exit_code)
@@ -254,22 +283,8 @@ def parse_args():
     return parser.parse_args()
 
 
-def stage_report_node_info():
-    hostname = socket.gethostname()
-
-    os = "[unknown OS]"
-    try:
-        with open("/etc/os-release", "r") as f:
-            for line in f.readlines():
-                if line.startswith("PRETTY_NAME="):
-                    os = line.split("PRETTY_NAME=")[1].strip().strip('"')
-                    break
-    except Exception:
-        pass
-
-    release = platform.release()
-
-    logging.info(f"--- {hostname} {os} {release}")
+def stage_report_node_info(runner: Runner):
+    logging.info(f"--- {runner.system_information}")
     logging.info("---")
 
 
@@ -293,14 +308,14 @@ def main():
     )
 
     try:
-        config = stage_validate_config(args)
+        runner = stage_validate_config(args)
     except InvalidConfigError as e:
         logging.error(f"couldn't validate file '{args.config_file}': {e}")
         sys.exit(1)
 
-    stage_report_node_info()
-    stage_run_tests(config)
-    stage_report(config)
+    stage_report_node_info(runner)
+    stage_run_tests(runner)
+    stage_report(runner)
 
 
 if __name__ == "__main__":
